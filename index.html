@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teknofest - Güvenli Uydu Haberleşmesi Simülatörü</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header><h1>GEN9-SAT | Uydu Haberleşmesi Hibrit Savunma Simülatörü</h1></header>
+    <div class="main-content">
+        <div id="controls">
+            <h2>Kontrol Paneli</h2>
+            <div class="sim-group isms-group">
+                <h3>⭐ ISMS Orkestrasyon Demosu</h3>
+                <div class="button-with-tooltip">
+                    <button id="startIsmsBtn1">Senaryo 1: Topyekün Saldırı</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Planlı ve eş zamanlı saldırılara karşı ISMS'in bütünsel tepkisini gösterir.</span></span>
+                </div>
+                <div class="button-with-tooltip">
+                    <button id="startIsmsBtn2">Senaryo 2: Rastgele Saldırılar</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Rastgele ve öngörülemez tehditlere karşı ISMS'in adaptasyon yeteneğini gösterir.</span></span>
+                </div>
+            </div>
+            <div class="sim-group">
+                <h3>1. Jamming Simülasyonu</h3>
+                <div class="button-with-tooltip">
+                    <button id="startJammingBtn1">Savunma Aktif</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">AI-ATS ile Tespit ve Hibrit Karşı Tedbir (FHSS + Anten).</span></span>
+                </div>
+                 <div class="button-with-tooltip">
+                    <button id="startJammingBtn2">Savunmasız Mod</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Savunmalar devre dışıyken Jammer'ın etkisini test eder.</span></span>
+                </div>
+                 <div class="button-with-tooltip">
+                    <button id="startJammingBtn3">Normal Operasyon</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Saldırı olmadan sistemin normal çalışmasını test eder.</span></span>
+                </div>
+            </div>
+            <div class="sim-group">
+                <h3>2. HQC-SAT Simülasyonu</h3>
+                <div class="button-with-tooltip">
+                    <button id="startHqcBtn1">Tam Koruma Modu</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Tüm Savunmalar Aktif. Constant-Time ile Yan-Kanal Koruması.</span></span>
+                </div>
+                <div class="button-with-tooltip">
+                    <button id="startHqcBtn2">Zafiyetli Mod</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Constant-Time Savunması Pasif. Yan-Kanal Zafiyeti Testi.</span></span>
+                </div>
+                <div class="button-with-tooltip">
+                    <button id="startHqcBtn3">Güvenliksiz Mod</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Forward Secrecy Pasif. Operasyonel Risk Testi.</span></span>
+                </div>
+            </div>
+            <div class="sim-group">
+                <h3>3. BC-DIS (Blockchain) Simülasyonu</h3>
+                <div class="button-with-tooltip">
+                    <button id="startBlockchainBtn1">Savunma Aktif Modu</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">ECDSA, Merkle Ağacı ve Akıllı Kontrat ile tam veri doğrulama.</span></span>
+                </div>
+                <div class="button-with-tooltip">
+                    <button id="startBlockchainBtn2">Savunma Pasif Modu</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Savunmalar Pasif. Manipüle edilmiş verilerin zincire eklendiğini test eder.</span></span>
+                </div>
+                <div class="button-with-tooltip">
+                    <button id="startBlockchainBtn3">Saldırı Yok Modu</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Normal Operasyon. PoSat Konsensüs performansını test eder.</span></span>
+                </div>
+            </div>
+            <div class="sim-group">
+                <h3>4. DDoS Saldırısı Simülasyonu</h3>
+                <div class="button-with-tooltip">
+                    <button id="startDdosBtn1">Tam Savunma Modu</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Whitelist, Blacklist ve Cloud Scrubber ile Hibrit Koruma.</span></span>
+                </div>
+                <div class="button-with-tooltip">
+                    <button id="startDdosBtn2">Savunmasız Mod</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Tüm savunmalar pasif. Sunucu kapasitesinin aşımını test eder.</span></span>
+                </div>
+                <div class="button-with-tooltip">
+                    <button id="startDdosBtn3">Saldırı Yok Modu</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Normal trafik altında sistemin temel performansını ölçer.</span></span>
+                </div>
+            </div>
+            <div class="sim-group">
+                <h3>5. Spoofing (MF-SatAuth) Simülasyonu</h3>
+                <div class="button-with-tooltip">
+                    <button id="startSpoofingBtn1">Tam Savunma Modu</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">5 Faktörlü MF-SatAuth ve AI-ATS ile tam koruma.</span></span>
+                </div>
+                <div class="button-with-tooltip">
+                    <button id="startSpoofingBtn2">Savunmasız Mod</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">MF-SatAuth devre dışı. Sadece AI-ATS anomali tespiti yapar.</span></span>
+                </div>
+                <div class="button-with-tooltip">
+                    <button id="startSpoofingBtn3">Saldırı Yok Modu</button>
+                    <span class="tooltip-container">?<span class="tooltip-text">Sadece meşru sinyallerle sistemin doğru çalışmasını test eder.</span></span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="log-and-charts-container">
+            <div id="log-container">
+                <div id="log-header">CANLI SİMÜLASYON KONSOLU</div>
+                <div id="log-box"></div>
+            </div>
+            <div id="live-charts-container">
+                <div class="chart-box"><canvas id="spectrumChart"></canvas></div>
+                <div class="chart-box"><canvas id="snrChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+    <div id="results-container">
+        <h2>Sonuçlar</h2>
+        <div id="report-content">
+            <p>Çalıştırmak için kontrol panelinden bir simülasyon senaryosu seçin.</p>
+        </div>
+    </div>
+    <script src="/static/script.js?v=2.0"></script> 
+</body>
+</html>
