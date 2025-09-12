@@ -3,125 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teknofest - Güvenli Uydu Haberleşmesi Simülatörü</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="/static/style.css">
+    <title>Gen9Sat - Hibrit Güvenlik Mimarisi</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ... (CSS stilleri öncekiyle aynı, değişiklik yok) ... */
+        :root {
+            --bg-color: #1a1a1a; --sidebar-bg: #252526; --console-bg: #1e1e1e;
+            --border-color: #333333; --text-color: #cccccc; --header-color: #569cd6;
+            --menu-hover-bg: #3e3e42; --button-bg: #0e639c; --button-hover-bg: #1177bb;
+            --status-connected: #4ec9b0; --status-disconnected: #f44747;
+            --log-info: #9cdcfe; --log-success: #4ec9b0; --log-fail: #f44747;
+            --log-alert: #ce9178; --log-header: #c586c0; --log-status: #6a9955; --log-warn: #dcdcaa;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 300px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; overflow-y: auto; }
+        .sidebar h2 { font-size: 1.2em; color: var(--header-color); margin: 0 0 20px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .sidebar nav ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar nav li { padding: 12px 15px; margin-bottom: 5px; cursor: pointer; border-radius: 5px; transition: background-color 0.2s; }
+        .sidebar nav li:hover { background-color: var(--menu-hover-bg); }
+        .sidebar nav li.active { background-color: var(--header-color); color: white; }
+        .description-area { margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px; }
+        .description-area h3 { color: var(--header-color); }
+        .description-area p { font-size: 0.9em; line-height: 1.5; }
+        .description-content { display: none; }
+        .description-content.active { display: block; }
+        .main-content { flex-grow: 1; padding: 20px; display: flex; flex-direction: column; overflow: hidden; }
+        .simulation-area { display: none; }
+        .simulation-area.active { display: block; }
+        .simulation-area h1 { margin-top: 0; color: var(--header-color); }
+        .controls { margin-bottom: 20px; }
+        .controls button { background-color: var(--button-bg); color: white; border: none; padding: 10px 15px; cursor: pointer; margin-right: 10px; border-radius: 5px; transition: background-color 0.2s; }
+        .controls button:hover { background-color: var(--button-hover-bg); }
+        .console-results-container { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
+        .console-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        #console { border: 1px solid var(--border-color); flex-basis: 50%; overflow-y: scroll; padding: 15px; background-color: var(--console-bg); white-space: pre-wrap; font-family: "Courier New", Courier, monospace; font-size: 0.9em; }
+        #results-area { border: 1px solid var(--border-color); flex-basis: 50%; overflow-y: scroll; padding: 15px; background-color: var(--console-bg); margin-top: 10px; display: none; }
+        #status-indicator { font-weight: bold; }
+        .status-connected { color: var(--status-connected); } .status-disconnected { color: var(--status-disconnected); }
+        .log-info { color: var(--log-info); } .log-success { color: var(--log-success); } .log-fail { color: var(--log-fail); } .log-alert { color: var(--log-alert); font-weight: bold; } .log-header { color: var(--log-header); border-top: 1px dashed #555; padding-top: 5px; margin-top:5px;} .log-status { color: var(--log-status); } .log-warn { color: var(--log-warn); }
+        .report-container h1, .report-container h3 { color: var(--header-color); }
+        .report-container h1 { font-size: 1.5em; }
+        .report-container .scenario-text { font-style: italic; color: #a0a0a0; margin-top: -10px;}
+        .report-container h3 { border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-top: 25px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .stat-card { background-color: var(--sidebar-bg); padding: 15px; border-radius: 5px; border-left: 4px solid var(--header-color); }
+        .stat-label { display: block; font-size: 0.9em; color: var(--text-color); }
+        .stat-value { display: block; font-size: 1.4em; font-weight: bold; color: white; margin-top: 5px; }
+        .results-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .results-table th, .results-table td { padding: 10px; border: 1px solid var(--border-color); text-align: left; }
+        .results-table thead { background-color: #333; }
+        .report-graph { max-width: 100%; height: auto; margin-top: 15px; border-radius: 5px; }
+        .charts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .chart-wrapper { background-color: var(--sidebar-bg); padding: 15px; border-radius: 5px; }
+        .action-summary { background-color: var(--sidebar-bg); padding: 15px; border-radius: 5px; margin-top: 15px; font-style: italic;}
+        @media (max-width: 1200px) { .charts-container { grid-template-columns: 1fr; } }
+    </style>
 </head>
 <body>
-    <header><h1>GEN9-SAT | Uydu Haberleşmesi Hibrit Savunma Simülatörü</h1></header>
-    <div class="main-content">
-        <div id="controls">
-            <h2>Kontrol Paneli</h2>
-            <div class="sim-group isms-group">
-                <h3>⭐ ISMS Orkestrasyon Demosu</h3>
-                <div class="button-with-tooltip">
-                    <button id="startIsmsBtn1">Senaryo 1: Topyekün Saldırı</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Planlı ve eş zamanlı saldırılara karşı ISMS'in bütünsel tepkisini gösterir.</span></span>
-                </div>
-                <div class="button-with-tooltip">
-                    <button id="startIsmsBtn2">Senaryo 2: Rastgele Saldırılar</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Rastgele ve öngörülemez tehditlere karşı ISMS'in adaptasyon yeteneğini gösterir.</span></span>
-                </div>
-            </div>
-            <div class="sim-group">
-                <h3>1. Jamming Simülasyonu</h3>
-                <div class="button-with-tooltip">
-                    <button id="startJammingBtn1">Savunma Aktif</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">AI-ATS ile Tespit ve Hibrit Karşı Tedbir (FHSS + Anten).</span></span>
-                </div>
-                 <div class="button-with-tooltip">
-                    <button id="startJammingBtn2">Savunmasız Mod</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Savunmalar devre dışıyken Jammer'ın etkisini test eder.</span></span>
-                </div>
-                 <div class="button-with-tooltip">
-                    <button id="startJammingBtn3">Normal Operasyon</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Saldırı olmadan sistemin normal çalışmasını test eder.</span></span>
-                </div>
-            </div>
-            <div class="sim-group">
-                <h3>2. HQC-SAT Simülasyonu</h3>
-                <div class="button-with-tooltip">
-                    <button id="startHqcBtn1">Tam Koruma Modu</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Tüm Savunmalar Aktif. Constant-Time ile Yan-Kanal Koruması.</span></span>
-                </div>
-                <div class="button-with-tooltip">
-                    <button id="startHqcBtn2">Zafiyetli Mod</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Constant-Time Savunması Pasif. Yan-Kanal Zafiyeti Testi.</span></span>
-                </div>
-                <div class="button-with-tooltip">
-                    <button id="startHqcBtn3">Güvenliksiz Mod</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Forward Secrecy Pasif. Operasyonel Risk Testi.</span></span>
-                </div>
-            </div>
-            <div class="sim-group">
-                <h3>3. BC-DIS (Blockchain) Simülasyonu</h3>
-                <div class="button-with-tooltip">
-                    <button id="startBlockchainBtn1">Savunma Aktif Modu</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">ECDSA, Merkle Ağacı ve Akıllı Kontrat ile tam veri doğrulama.</span></span>
-                </div>
-                <div class="button-with-tooltip">
-                    <button id="startBlockchainBtn2">Savunma Pasif Modu</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Savunmalar Pasif. Manipüle edilmiş verilerin zincire eklendiğini test eder.</span></span>
-                </div>
-                <div class="button-with-tooltip">
-                    <button id="startBlockchainBtn3">Saldırı Yok Modu</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Normal Operasyon. PoSat Konsensüs performansını test eder.</span></span>
-                </div>
-            </div>
-            <div class="sim-group">
-                <h3>4. DDoS Saldırısı Simülasyonu</h3>
-                <div class="button-with-tooltip">
-                    <button id="startDdosBtn1">Tam Savunma Modu</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Whitelist, Blacklist ve Cloud Scrubber ile Hibrit Koruma.</span></span>
-                </div>
-                <div class="button-with-tooltip">
-                    <button id="startDdosBtn2">Savunmasız Mod</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Tüm savunmalar pasif. Sunucu kapasitesinin aşımını test eder.</span></span>
-                </div>
-                <div class="button-with-tooltip">
-                    <button id="startDdosBtn3">Saldırı Yok Modu</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Normal trafik altında sistemin temel performansını ölçer.</span></span>
-                </div>
-            </div>
-            <div class="sim-group">
-                <h3>5. Spoofing (MF-SatAuth) Simülasyonu</h3>
-                <div class="button-with-tooltip">
-                    <button id="startSpoofingBtn1">Tam Savunma Modu</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">5 Faktörlü MF-SatAuth ve AI-ATS ile tam koruma.</span></span>
-                </div>
-                <div class="button-with-tooltip">
-                    <button id="startSpoofingBtn2">Savunmasız Mod</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">MF-SatAuth devre dışı. Sadece AI-ATS anomali tespiti yapar.</span></span>
-                </div>
-                <div class="button-with-tooltip">
-                    <button id="startSpoofingBtn3">Saldırı Yok Modu</button>
-                    <span class="tooltip-container">?<span class="tooltip-text">Sadece meşru sinyallerle sistemin doğru çalışmasını test eder.</span></span>
-                </div>
-            </div>
+    <aside class="sidebar">
+        <h2>GEN9SAT GÜVENLİK</h2>
+        <nav><ul id="menu">
+            <li data-sim="jamming" class="active">JAMMING (DFH-SS)</li><li data-sim="hqc">HQC-SAT (Kripto)</li>
+            <li data-sim="blockchain">BC-DIS (Blockchain)</li><li data-sim="ddos">DDoS (Hibrit Kalkan)</li>
+            <li data-sim="spoofing">SPOOFING (MF-SatAuth)</li><li data-sim="isms">ISMS ORKESTRASYON</li>
+        </ul></nav>
+        <div class="description-area">
+            <div id="jamming-desc" class="description-content active"><h3>Jamming Savunması</h3><p>Yapay zeka (AI-ATS) ile spektrumu sürekli analiz ederek anormal sinyal aktivitelerini tespit eder. Tehdidin tipine göre hibrit bir savunma uygular: Faz Dizili Anten ile jammer yönünü fiziksel olarak bloke eder (Nulling) ve/veya akıllı frekans atlama (DFH-SS) ile iletişim kanalını anında güvenli bir frekansa taşır.</p></div>
+            <div id="hqc-desc" class="description-content"><h3>Kuantum Sonrası Kripto</h3><p>HQC-SAT, kuantum bilgisayarlarının gelecekteki tehditlerine karşı geliştirilmiş, NIST standartlarında bir Kuantum Sonrası Kriptografi (PQC) modülüdür. Yan kanal saldırılarına ve adaptif sinyal koşullarına karşı dinamik koruma sunar.</p></div>
+            <div id="blockchain-desc" class="description-content"><h3>Merkeziyetsiz Veri Bütünlüğü</h3><p>BC-DIS, uydular arası telemetri ve komut verilerinin bütünlüğünü 'Proof of Satellite' (PoSat) konsensüsü ve Akıllı Kontratlar ile sağlar.</p></div>
+            <div id="ddos-desc" class="description-content"><h3>Hibrit DDoS Kalkanı</h3><p>Yer istasyonuna yönelik katmanlı bir DDoS savunması sunar. Yapay zeka, Dilithium imzaları, dinamik kara liste ve bulut tabanlı beyaz liste ile koruma sağlar.</p></div>
+            <div id="spoofing-desc" class="description-content"><h3>Çok Faktörlü Uydu Kimlik Doğrulama</h3><p>MF-SatAuth, sahte uydu sinyallerini (Spoofing) engellemek için 5 katmanlı bir kimlik doğrulama (ECDSA, Nonce, TOTP, TLE, ZKP) ve RF parmak izi analizi kullanır.</p></div>
+            <div id="isms-desc" class="description-content"><h3>Akıllı Güvenlik Orkestrasyonu</h3><p>ISMS, tüm savunma modüllerinden gelen alarmları merkezi bir beyin gibi işler ve otonom karşı tedbirler alır.</p></div>
         </div>
+    </aside>
+
+    <main class="main-content">
+        <div id="jamming-area" class="simulation-area active"><h1>JAMMING (DFH-SS) SİMÜLASYONU</h1><div class="controls"><button onclick="startSimulation('jamming', '1')">Tam Savunma</button><button onclick="startSimulation('jamming', '2')">Savunmasız</button><button onclick="startSimulation('jamming', '3')">Normal</button></div></div>
+        <div id="hqc-area" class="simulation-area"><h1>HQC-SAT (Kripto) SİMÜLASYONU</h1><div class="controls"><button onclick="startSimulation('hqc', '1')">Tam Koruma</button><button onclick="startSimulation('hqc', '2')">Zafiyetli</button><button onclick="startSimulation('hqc', '3')">Güvenliksiz</button></div></div>
+        <div id="blockchain-area" class="simulation-area"><h1>BC-DIS (Blockchain) SİMÜLASYONU</h1><div class="controls"><button onclick="startSimulation('blockchain', '1')">Savunma Aktif</button><button onclick="startSimulation('blockchain', '2')">Savunma Pasif</button><button onclick="startSimulation('blockchain', '3')">Saldırı Yok</button></div></div>
+        <div id="ddos-area" class="simulation-area"><h1>DDoS (Hibrit Kalkan) SİMÜLASYONU</h1><div class="controls"><button onclick="startSimulation('ddos', '1')">Savunma Aktif</button><button onclick="startSimulation('ddos', '2')">Savunmasız</button><button onclick="startSimulation('ddos', '3')">Normal</button></div></div>
+        <div id="spoofing-area" class="simulation-area"><h1>SPOOFING (MF-SatAuth) SİMÜLASYONU</h1><div class="controls"><button onclick="startSimulation('spoofing', '1')">Tam Savunma</button><button onclick="startSimulation('spoofing', '2')">Savunmasız</button><button onclick="startSimulation('spoofing', '3')">Normal</button></div></div>
+        <div id="isms-area" class="simulation-area"><h1>ISMS ORKESTRASYON SİMÜLASYONU</h1><div class="controls"><button onclick="startSimulation('isms', '1')">Topyekün Saldırı</button><button onclick="startSimulation('isms', '2')">Dinamik</button></div></div>
+
+        <div class="console-results-container">
+            <div class="console-header"><span>CANLI SİMÜLASYON KONSOLU</span><span id="status-indicator" class="status-disconnected">SUNUCU BAĞLANTISI: BAĞLANTI YOK</span></div>
+            <div id="console"></div>
+            <div id="results-area"></div>
+        </div>
+    </main>
+
+    <script>
+        // ... (JavaScript'in üst kısmı - switchSimulation, connect, startSimulation - aynı kalır) ...
+        const menuItems = document.querySelectorAll("#menu li");
+        const simAreas = document.querySelectorAll(".simulation-area");
+        const descContents = document.querySelectorAll(".description-content");
+        const consoleDiv = document.getElementById("console");
+        const resultsArea = document.getElementById("results-area");
+        const statusIndicator = document.getElementById("status-indicator");
+        let ws;
+        let activeCharts = [];
+
+        function switchSimulation(simName) {
+            menuItems.forEach(item => item.classList.remove('active'));
+            document.querySelector(`li[data-sim="${simName}"]`).classList.add('active');
+            simAreas.forEach(area => area.classList.remove('active'));
+            document.getElementById(`${simName}-area`).classList.add('active');
+            descContents.forEach(desc => desc.classList.remove('active'));
+            document.getElementById(`${simName}-desc`).classList.add('active');
+        }
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', () => switchSimulation(item.dataset.sim));
+        });
+
+        function connect() {
+            if (ws && ws.readyState === WebSocket.OPEN) return;
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => { statusIndicator.textContent = "SUNUCU BAĞLANTISI: BAĞLANDI"; statusIndicator.className = "status-connected"; };
+            ws.onclose = () => { statusIndicator.textContent = "SUNUCU BAĞLANTISI: KAPANDI"; statusIndicator.className = "status-disconnected"; ws = null; };
+            ws.onerror = () => { statusIndicator.textContent = "SUNUCU BAĞLANTISI: HATA"; statusIndicator.className = "status-disconnected"; };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type !== 'final') {
+                    const p = document.createElement("p");
+                    p.className = "log-" + (data.type || "info");
+                    p.textContent = data.message;
+                    consoleDiv.appendChild(p);
+                } else if (data.type === 'final' && data.summary) {
+                    const finalMessage = document.createElement("p");
+                    finalMessage.className = "log-success";
+                    finalMessage.textContent = ">>> Simülasyon tamamlandı. Sonuç raporu aşağıdadır:";
+                    consoleDiv.appendChild(finalMessage);
+                    renderReport(data.summary);
+                }
+                consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            };
+        }
+
+        function renderReport(summary) {
+            let reportHTML = `<div class="report-container">`;
+            reportHTML += `<h1>${summary.title || 'Sonuç Raporu'}</h1>`;
+            if (summary.scenario) reportHTML += `<p class="scenario-text">Test Edilen Senaryo: ${summary.scenario}</p>`;
+            
+            // İstatistiksel Özet Kartları
+            if (summary.istatistiksel_ozet) {
+                reportHTML += `<h3>İstatistiksel Özet</h3><div class="stats-grid">`;
+                for (const [key, value] of Object.entries(summary.istatistiksel_ozet)) {
+                    reportHTML += `<div class="stat-card"><span class="stat-label">${key.replace(/_/g, ' ')}</span><span class="stat-value">${value}</span></div>`;
+                }
+                reportHTML += `</div>`;
+            }
+
+            // YENİ: Savunma Aksiyonları Metin Özeti
+            if (summary.savunma_aksiyon_ozeti) {
+                reportHTML += `<p class="action-summary">${summary.savunma_aksiyon_ozeti}</p>`;
+            }
+
+            if(summary.sistem_degerlendirmesi) reportHTML += `<h3>Sistem Değerlendirmesi</h3><p>${summary.sistem_degerlendirmesi}</p>`;
+            if(summary.yonetici_ozeti) reportHTML += `<h3>Yönetici Özeti</h3><p>${summary.yonetici_ozeti}</p>`;
+            
+            // YENİ: Başarı/Başarısızlık Grafikleri
+            reportHTML += `<div class="charts-container">`;
+            if(summary.istatistiksel_ozet && summary.istatistiksel_ozet['Toplam Paket'] !== undefined) {
+                 reportHTML += `<div class="chart-wrapper"><h4>Genel Başarı Durumu</h4><canvas id="overallSuccessChart"></canvas></div>`;
+                 reportHTML += `<div class="chart-wrapper"><h4>Saldırı Anındaki Başarım</h4><canvas id="attackSuccessChart"></canvas></div>`;
+            }
+            reportHTML += `</div>`;
+            
+            if (summary.asamali_basari_analizi && summary.asamali_basari_analizi.rows) {
+                reportHTML += `<h3>Aşamalı Başarı Analizi</h3><table class="results-table"><thead><tr>`;
+                summary.asamali_basari_analizi.headers.forEach(header => { reportHTML += `<th>${header}</th>`; });
+                reportHTML += `</tr></thead><tbody>`;
+                summary.asamali_basari_analizi.rows.forEach(row => { reportHTML += `<tr><td>${row.Asama}</td><td>${row.Oran}</td></tr>`; });
+                reportHTML += `</tbody></table>`;
+            }
+            if (summary.gorsel_analiz) {
+                reportHTML += `<h3>Görsel Analiz</h3><img src="data:image/png;base64,${summary.gorsel_analiz.grafik_base64}" alt="SNR Grafiği" class="report-graph"><p>${summary.gorsel_analiz.grafik_yorumu}</p>`;
+            }
+            reportHTML += `</div>`;
+            resultsArea.innerHTML = reportHTML;
+            resultsArea.style.display = 'block';
+            resultsArea.scrollTop = 0;
+            
+            // Grafikleri çizdir
+            setTimeout(() => renderCharts(summary), 100);
+        }
+
+        function renderCharts(summary) {
+            activeCharts.forEach(chart => chart.destroy());
+            activeCharts = [];
+            const stats = summary.istatistiksel_ozet;
+            if (!stats) return;
+
+            // Chart 1 & 2: Başarı/Başarısızlık Bar Grafikleri
+            if (stats['Toplam Paket'] !== undefined) {
+                const successfulPackets = parseInt(stats['Başarılı Paket']);
+                const totalPackets = parseInt(stats['Toplam Paket']);
+                const failedPackets = totalPackets - successfulPackets;
+                
+                const overallCtx = document.getElementById('overallSuccessChart');
+                if(overallCtx) {
+                    activeCharts.push(new Chart(overallCtx, { type: 'bar', data: { labels: [''], datasets: [{ label: 'Başarılı', data: [successfulPackets], backgroundColor: 'rgba(78, 201, 176, 0.7)' }, { label: 'Başarısız', data: [failedPackets], backgroundColor: 'rgba(244, 71, 71, 0.7)' }] }, options: { indexAxis: 'y', responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } } }));
+                }
+                
+                const attackSuccessRate = parseFloat(stats['Saldırı Anındaki Başarı Oranı'].replace('%', ''));
+                const attackActions = stats['Tespit Edilen Anomali'];
+                const attackSuccessCount = Math.round(attackActions * (attackSuccessRate / 100));
+                const attackFailCount = attackActions - attackSuccessCount;
+                const attackCtx = document.getElementById('attackSuccessChart');
+                if(attackCtx && attackActions > 0){
+                    activeCharts.push(new Chart(attackCtx, { type: 'bar', data: { labels: [''], datasets: [{ label: 'Başarılı', data: [attackSuccessCount], backgroundColor: 'rgba(78, 201, 176, 0.7)' }, { label: 'Başarısız', data: [attackFailCount], backgroundColor: 'rgba(244, 71, 71, 0.7)' }] }, options: { indexAxis: 'y', responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } } }));
+                }
+            }
+        }
         
-        <div id="log-and-charts-container">
-            <div id="log-container">
-                <div id="log-header">CANLI SİMÜLASYON KONSOLU</div>
-                <div id="log-box"></div>
-            </div>
-            <div id="live-charts-container">
-                <div class="chart-box"><canvas id="spectrumChart"></canvas></div>
-                <div class="chart-box"><canvas id="snrChart"></canvas></div>
-            </div>
-        </div>
-    </div>
-    <div id="results-container">
-        <h2>Sonuçlar</h2>
-        <div id="report-content">
-            <p>Çalıştırmak için kontrol panelinden bir simülasyon senaryosu seçin.</p>
-        </div>
-    </div>
-    <script src="/static/script.js?v=2.0"></script> 
+        function startSimulation(simulationType, scenario) {
+            resultsArea.style.display = 'none';
+            consoleDiv.innerHTML = "";
+            activeCharts.forEach(chart => chart.destroy());
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                connect();
+                setTimeout(() => { if (ws && ws.readyState === WebSocket.OPEN) sendStartCommand(simulationType, scenario); else consoleDiv.innerHTML = "<p class='log-fail'>Sunucuya bağlanılamadı.</p>"; }, 1000);
+            } else { sendStartCommand(simulationType, scenario); }
+        }
+        function sendStartCommand(simulationType, scenario){
+            ws.send(JSON.stringify({ simulation: simulationType, scenario: scenario }));
+        }
+        connect();
+    </script>
 </body>
 </html>
